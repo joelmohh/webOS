@@ -15,43 +15,46 @@
         </div>
 
         <div class="center-side">
-            <span class="upbar-item">Feb 14 16:50</span>
+            <span class="upbar-item" id="time"></span>
         </div>
 
         <div class="right-side">
             <div class="upbar-group">
                 <span class="icon"><i class="fa-solid fa-wifi"></i></span>
                 <span class="icon"><i class="fa-solid fa-volume-high"></i></span>
-                <span class="icon"><i class="fa-solid fa-battery-empty fa-rotate-270"></i> 0%</span>
+                <span class="icon"><i class="fa-solid fa-battery-three-quarters"></i> 87%</span>
             </div>
         </div>
     </header>
 
     <main class="desktop-area">
         <nav class="launcher-dock">
-            <div class="dock-item" title="Files">A</div>
-            <div class="dock-item" title="Browser">B</div>
-            <div class="dock-item" title="Terminal">C</div>
-            <div class="dock-item" title="Settings">D</div>
+            <div class="dock-item" data-app="" title="App 1">
+                <i class="fa-solid fa-circle"></i>
+            </div>
+            <div class="dock-item" data-app="" title="App 2">
+                <i class="fa-solid fa-circle"></i>
+            </div>
+            <div class="dock-item" data-app="" title="App 3">
+                <i class="fa-solid fa-circle"></i>
+            </div>
+            <div class="dock-item" data-app="" title="App 4">
+                <i class="fa-solid fa-circle"></i>
+            </div>
             <div class="spacer"></div>
-            <div class="dock-item show-apps">⠿</div>
+            <div class="dock-item" data-app="" title="Show Applications">
+                <i class="fa-solid fa-th"></i>
+            </div>
         </nav>
 
-        <div class="window-manager">
-            <div class="os-card">
-                <div class="os-card-header">
-                    <span>Welcome to JoelmOS</span>
-                    <div class="window-controls">
-                        <span>_</span> <span>▢</span> <span class="close">✕</span>
-                    </div>
-                </div>
-                <div class="os-card-content">
-                    <img src="assets/logo.png" alt="Logo" class="os-logo">
-                    <p>Lorem ipsum</p>
-                </div>
-            </div>
+        <div class="window-manager" id="window-manager">
+        </div>
+
+        <div class="taskbar" id="taskbar">
         </div>
     </main>
 
+    <script src="./js/script.js"></script>
+    <script src="./js/apps.js"></script>
 </body>
 </html>
