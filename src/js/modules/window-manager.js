@@ -277,6 +277,11 @@ const Apps = {};
 Apps.launchApp = function(appId) {
     const app = Apps[appId];
     if (!app) return;
-    
-    WindowManager.createWindow(appId, app.title, app.icon, app.getContent());
+
+    const windowId = WindowManager.createWindow(appId, app.title, app.icon, app.getContent());
+    if (typeof app.onOpen === 'function') {
+        app.onOpen(windowId);
+    }
+
+    return windowId;
 };

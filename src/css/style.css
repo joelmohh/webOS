@@ -199,7 +199,7 @@ body {
 }
 
 .os-window-content {
-    padding: 20px;
+    padding: 0;
     flex-grow: 1;
     overflow: auto;
     background: #f9f9f9;
@@ -374,6 +374,161 @@ body {
     border: 1px solid #555;
     overflow: hidden;
     white-space: nowrap;
+}
+
+.os-window[data-app-id="notepad"] .os-window-content {
+    padding: 0;
+    overflow: hidden;
+    background: #ffffff;
+}
+
+.notepad-app {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+}
+
+.notepad-toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 8px;
+    padding: 0;
+    border-bottom: 1px solid #ebebeb;
+    background: #fafafa;
+    overflow-x: auto;
+}
+
+.notepad-btn {
+    border: 1px solid #d9d9d9;
+    background: #fff;
+    border-radius: 4px;
+    padding: 5px 9px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #333;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.notepad-btn:hover {
+    background: #f3f3f3;
+    border-color: #cfcfcf;
+}
+
+.notepad-meta {
+    font-size: 12px;
+    color: #666;
+}
+
+.notepad-title {
+    min-width: 200px;
+    width: 260px;
+    border: 1px solid #d9d9d9;
+    border-radius: 4px;
+    padding: 6px 8px;
+    font-size: 13px;
+    color: #333;
+    background: #fff;
+}
+
+.notepad-workspace {
+    flex: 1;
+    min-height: 0;
+    background: #fff;
+}
+
+.notepad-editor {
+    width: 100%;
+    height: 100%;
+    border: none;
+    padding: 0;
+    font-family: monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    resize: none;
+    background: #fff;
+    color: #1f2937;
+    white-space: pre-wrap;
+}
+
+.notepad-editor:focus,
+.notepad-title:focus,
+.terminal-input:focus {
+    outline: none;
+    border-color: #7b7b7b;
+}
+
+.notepad-status {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #666;
+    border-top: 1px solid #ebebeb;
+    background: #fafafa;
+    padding: 0;
+}
+
+.terminal-app {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: #101010;
+    border-radius: 6px;
+    border: 1px solid #1f1f1f;
+    color: #c9f5cc;
+    font-family: monospace;
+    font-size: 13px;
+    overflow: hidden;
+}
+
+.terminal-output {
+    flex: 1;
+    overflow: auto;
+    padding: 0;
+}
+
+.terminal-line {
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin-bottom: 4px;
+}
+
+.terminal-command {
+    color: #f0f0f0;
+}
+
+.terminal-error {
+    color: #ff8a8a;
+}
+
+.terminal-input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-top: 1px solid #262626;
+    background: #0b0b0b;
+    padding: 0;
+}
+
+.terminal-prompt {
+    color: #87f08c;
+    white-space: nowrap;
+}
+
+.terminal-input {
+    flex: 1;
+    background: transparent;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    color: #e7ffe9;
+    padding: 6px 8px;
+    font-family: inherit;
+    font-size: 13px;
 }
 
 .setting-group {
