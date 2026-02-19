@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,9 +20,9 @@
 
         <div class="right-side">
             <div class="upbar-group">
-                <span class="icon"><i class="fa-solid fa-wifi"></i></span>
-                <span class="icon"><i class="fa-solid fa-volume-high"></i></span>
-                <span class="icon"><i class="fa-solid fa-battery-three-quarters"></i> 87%</span>
+                <span class="icon" onclick="toggleSystemMenu('wifi')" style="cursor: pointer;"><i class="fa-solid fa-wifi"></i></span>
+                <span class="icon" onclick="toggleSystemMenu('volume')" style="cursor: pointer;"><i class="fa-solid fa-volume-high"></i></span>
+                <span class="icon" id="battery-display" onclick="toggleSystemMenu('battery')" style="cursor: pointer;"><i class="fa-solid fa-battery-three-quarters"></i> 87%</span>
             </div>
         </div>
     </header>
@@ -54,7 +54,12 @@
         </div>
     </main>
 
-    <script src="./js/script.js"></script>
+    <script src="./js/modules/clock.js"></script>
+    <script src="./js/modules/battery-manager.js"></script>
+    <script src="./js/modules/calendar-manager.js"></script>
+    <script src="./js/modules/system-menu.js"></script>
+    <script src="./js/modules/window-manager.js"></script>
     <script src="./js/apps.js"></script>
+    <script src="./js/main.js"></script>
 </body>
 </html>

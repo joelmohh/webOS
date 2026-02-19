@@ -283,16 +283,276 @@ Apps.launchApp = function(appId) {
     WindowManager.createWindow(appId, app.title, app.icon, app.getContent());
 };
 
+const CalendarState = {
+    currentYear: new Date().getFullYear(),
+    currentMonth: new Date().getMonth(),
+    todayDate: new Date().getDate(),
+    todayMonth: new Date().getMonth(),
+    todayYear: new Date().getFullYear()
+};
+
 function updateTime() {
     const now = new Date();
     const hours = String(now.getHours()).padStart(2, '0');
     const minutes = String(now.getMinutes()).padStart(2, '0');
-    document.getElementById('time').textContent = `${hours}:${minutes}`;
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const dayName = days[now.getDay()];
+    const day = now.getDate();
+    const month = months[now.getMonth()];
+    
+    document.getElementById('time').innerHTML = `${dayName} ${day} ${month} ${hours}:${minutes}`;
+}
+
+function generateCalendar(year, month) {
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+    
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                        'July', 'August', 'September', 'October', 'November', 'December'];
+    
+    const isCurrentMonth = (year === CalendarState.todayYear && month === CalendarState.todayMonth);
+    
+    let calendarHTML = `
+        <div class="calendar-header">
+            <button class="calendar-nav-btn" data-nav="-1">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <strong>${monthNames[month]} ${year}</strong>
+            <button class="calendar-nav-btn" data-nav="1">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        </div>
+        <div class="calendar-grid">
+            <div class="calendar-day-name">S</div>
+            <div class="calendar-day-name">M</div>
+            <div class="calendar-day-name">T</div>
+            <div class="calendar-day-name">W</div>
+            <div class="calendar-day-name">T</div>
+            <div class="calendar-day-name">F</div>
+            <div class="calendar-day-name">S</div>
+    `;
+    
+    for (let i = 0; i < startingDayOfWeek; i++) {
+        calendarHTML += '<div class="calendar-day empty"></div>';
+    }
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+        const isToday = (isCurrentMonth && day === CalendarState.todayDate) ? 'today' : '';
+        calendarHTML += `<div class="calendar-day ${isToday}">${day}</div>`;
+    }
+    
+    calendarHTML += '</div>';
+    return calendarHTML;
+}
+
+function navigateCalendar(direction) {
+    CalendarState.currentMonth += direction;
+    
+    if (CalendarState.currentMonth > 11) {
+        CalendarState.currentMonth = 0;
+        CalendarState.currentYear++;
+    } else if (CalendarState.currentMonth < 0) {
+        CalendarState.currentMonth = 11;
+        CalendarState.currentYear--;
+    }
+    
+    updateCalendarView();
+}
+
+function updateCalendarView() {
+    const calendar = document.getElementById('calendar-popup');
+    if (calendar) {
+        calendar.innerHTML = generateCalendar(CalendarState.currentYear, CalendarState.currentMonth);
+    }
+}
+
+function toggleCalendar() {
+    let calendar = document.getElementById('calendar-popup');
+    
+    if (calendar) {
+        calendar.remove();
+    } else {
+        const now = new Date();
+        CalendarState.currentYear = now.getFullYear();
+        CalendarState.currentMonth = now.getMonth();
+        
+        calendar = document.createElement('div');
+        calendar.id = 'calendar-popup';
+        calendar.className = 'popup-menu';
+        calendar.innerHTML = generateCalendar(CalendarState.currentYear, CalendarState.currentMonth);
+        
+        const timeEl = document.getElementById('time');
+        const rect = timeEl.getBoundingClientRect();
+        calendar.style.left = rect.left + 'px';
+        calendar.style.top = (rect.bottom + 5) + 'px';
+        
+        document.body.appendChild(calendar);
+    }
+}
+
+function toggleSystemMenu(type) {
+    const existingMenu = document.querySelector('.popup-menu');
+    if (existingMenu) {
+        existingMenu.remove();
+        return;
+    }
+    
+    const menu = document.createElement('div');
+    menu.className = 'popup-menu system-menu';
+    
+    if (type === 'wifi') {
+        menu.innerHTML = `
+            <div class="menu-header">Wi-Fi</div>
+            <div class="menu-item active">
+                <i class="fa-solid fa-wifi"></i>
+                <span>Home Network</span>
+                <i class="fa-solid fa-lock" style="margin-left: auto; font-size: 12px;"></i>
+            </div>
+            <div class="menu-item">
+                <i class="fa-solid fa-wifi"></i>
+                <span>Guest Network</span>
+                <i class="fa-solid fa-lock" style="margin-left: auto; font-size: 12px;"></i>
+            </div>
+            <div class="menu-divider"></div>
+            <div class="menu-item">
+                <i class="fa-solid fa-gear"></i>
+                <span>Network Settings</span>
+            </div>
+        `;
+    } else if (type === 'volume') {
+        menu.innerHTML = `
+            <div class="menu-header">Volume</div>
+            <div class="volume-slider">
+                <i class="fa-solid fa-volume-low"></i>
+                <input type="range" min="0" max="100" value="70" class="slider">
+                <i class="fa-solid fa-volume-high"></i>
+            </div>
+            <div class="menu-divider"></div>
+            <div class="menu-item">
+                <i class="fa-solid fa-gear"></i>
+                <span>Sound Settings</span>
+            </div>
+        `;
+    } else if (type === 'battery') {
+        getBatteryInfo().then(info => {
+            menu.innerHTML = `
+                <div class="menu-header">Power</div>
+                <div class="battery-info">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        <i class="${info.icon}" style="font-size: 32px;"></i>
+                        <div>
+                            <div style="font-weight: bold;">${info.level}%</div>
+                            <div style="font-size: 11px; color: #999;">${info.status}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="menu-divider"></div>
+                <div class="menu-item">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>Power Settings</span>
+                </div>
+            `;
+        });
+        menu.innerHTML = `
+            <div class="menu-header">Power</div>
+            <div class="battery-info">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                    <i class="fa-solid fa-spinner fa-spin" style="font-size: 32px;"></i>
+                    <div>
+                        <div style="font-weight: bold;">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    const rightSide = document.querySelector('.right-side');
+    const rect = rightSide.getBoundingClientRect();
+    menu.style.right = '15px';
+    menu.style.top = (rect.bottom + 5) + 'px';
+    
+    document.body.appendChild(menu);
+}
+
+function getBatteryIcon(level, charging) {
+    if (charging) {
+        return 'fa-solid fa-battery-bolt';
+    }
+    if (level > 87) return 'fa-solid fa-battery-full';
+    if (level > 62) return 'fa-solid fa-battery-three-quarters';
+    if (level > 37) return 'fa-solid fa-battery-half';
+    if (level > 12) return 'fa-solid fa-battery-quarter';
+    return 'fa-solid fa-battery-empty';
+}
+
+function formatTime(seconds) {
+    if (seconds === Infinity || isNaN(seconds)) {
+        return 'Calculating...';
+    }
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    if (hours > 0) {
+        return `${hours}h ${minutes}m remaining`;
+    }
+    return `${minutes}m remaining`;
+}
+
+async function getBatteryInfo() {
+    try {
+        if ('getBattery' in navigator) {
+            const battery = await navigator.getBattery();
+            const level = Math.round(battery.level * 100);
+            const charging = battery.charging;
+            const icon = getBatteryIcon(level, charging);
+            
+            let status;
+            if (charging) {
+                status = battery.chargingTime !== Infinity 
+                    ? formatTime(battery.chargingTime) 
+                    : 'Charging';
+            } else {
+                status = battery.dischargingTime !== Infinity 
+                    ? formatTime(battery.dischargingTime) 
+                    : 'On Battery';
+            }
+            
+            return { level, charging, icon, status };
+        }
+    } catch (error) {
+        console.error('Battery API error:', error);
+    }
+    
+    return {
+        level: 100,
+        charging: false,
+        icon: 'fa-solid fa-battery-full',
+        status: 'Battery info unavailable'
+    };
+}
+
+async function updateBatteryDisplay() {
+    const batteryEl = document.getElementById('battery-display');
+    if (!batteryEl) return;
+    
+    const info = await getBatteryInfo();
+    batteryEl.innerHTML = `<i class="${info.icon}"></i> ${info.level}%`;
+    
+    if ('getBattery' in navigator) {
+        const battery = await navigator.getBattery();
+        
+        battery.addEventListener('levelchange', () => updateBatteryDisplay());
+        battery.addEventListener('chargingchange', () => updateBatteryDisplay());
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     updateTime();
     setInterval(updateTime, 60000);
+    
+    updateBatteryDisplay();
 
     const dockItems = document.querySelectorAll('.dock-item[data-app]');
     dockItems.forEach(item => {
@@ -302,5 +562,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 Apps.launchApp(appId);
             }
         });
+    });
+    
+    const timeEl = document.getElementById('time');
+    timeEl.style.cursor = 'pointer';
+    timeEl.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleCalendar();
+    });
+    
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.calendar-nav-btn')) {
+            const btn = e.target.closest('.calendar-nav-btn');
+            const direction = parseInt(btn.getAttribute('data-nav'));
+            navigateCalendar(direction);
+            return;
+        }
+        
+        const popup = document.querySelector('.popup-menu');
+        if (popup && !popup.contains(e.target) && !e.target.closest('#time') && !e.target.closest('.right-side')) {
+            popup.remove();
+        }
     });
 });
