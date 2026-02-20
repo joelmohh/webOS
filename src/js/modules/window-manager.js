@@ -1,6 +1,7 @@
 const WindowManager = {
     windows: {},
     windowCount: 0,
+    zIndexCounter: 100,
     focusedWindow: null,
     windowOrder: [],
 
@@ -181,6 +182,8 @@ const WindowManager = {
     },
 
     focusWindow(id) {
+        if (!this.windows[id]) return;
+
         if (this.focusedWindow && this.focusedWindow !== id) {
             const prevEl = this.windows[this.focusedWindow].element;
             prevEl.classList.remove('focused');
@@ -188,7 +191,8 @@ const WindowManager = {
         
         const windowEl = this.windows[id].element;
         windowEl.classList.add('focused');
-        windowEl.style.zIndex = 100 + this.windowCount;
+        this.zIndexCounter += 1;
+        windowEl.style.zIndex = this.zIndexCounter;
         this.focusedWindow = id;
         this.updateTaskbar();
     },
