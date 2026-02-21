@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     SettingsManager.init();
     Clock.init();
+    NotificationManager.init();
+    SpotlightManager.init();
     BatteryManager.updateBatteryDisplay();
 
     const renderAppsMenu = (anchorEl) => {
@@ -68,6 +70,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     const timeEl = document.getElementById('time');
+    const notificationTrigger = document.getElementById('notification-center-trigger');
+
+    notificationTrigger?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        NotificationManager.toggleCenter(notificationTrigger);
+    });
+
     timeEl.style.cursor = 'pointer';
     timeEl.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -87,4 +96,6 @@ document.addEventListener('DOMContentLoaded', () => {
             popup.remove();
         }
     });
+
+    WindowManager.restoreSession();
 });

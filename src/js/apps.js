@@ -111,7 +111,7 @@ Apps.notepad = {
                 }
 
                 if (action === 'timestamp') {
-                    insertAtCursor(new Date().toLocaleString());
+                    insertAtCursor(new Date().toLocaleString('en-US'));
                     return;
                 }
 
@@ -132,6 +132,11 @@ Apps.notepad = {
                     link.click();
                     URL.revokeObjectURL(link.href);
                     persist();
+                    NotificationManager.notify({
+                        title: 'Download complete',
+                        message: `${link.download} was exported from Notepad.`,
+                        type: 'success'
+                    });
                 }
             });
         });
@@ -465,6 +470,128 @@ Apps.calculator = {
         });
 
         render();
+    }
+};
+
+Apps.todo = {
+    title: 'To-Do List',
+    icon: 'fa-solid fa-list-check',
+    getContent() {
+        return `
+            <div class="todo-app">
+                <form class="todo-toolbar" data-role="todo-form">
+                    <input type="text" class="todo-input" data-role="todo-input" placeholder="Add a task..." aria-label="New task">
+                    <button type="submit" class="files-btn">Add</button>
+                </form>
+                <div class="todo-list" data-role="todo-list"></div>
+            </div>
+        `;
+    },
+    onOpen(windowId) {
+        const windowEl = document.getElementById(windowId);
+        if (!windowEl) return;
+
+        const form = windowEl.querySelector('[data-role="todo-form"]');
+        const input = windowEl.querySelector('[data-role="todo-input"]');
+        const list = windowEl.querySelector('[data-role="todo-list"]');
+
+        if (!form || !input || !list) return;
+
+        const storageKey = 'joelmos.todo.tasks';
+
+        const readTasks = () => {
+            try {
+                const raw = localStorage.getItem(storageKey);
+                const parsed = raw ? JSON.parse(raw) : [];
+                return Array.isArray(parsed) ? parsed : [];
+            } catch {
+                return [];
+            }
+        };
+
+        const writeTasks = (tasks) => {
+            localStorage.setItem(storageKey, JSON.stringify(tasks));
+        };
+
+        let tasks = readTasks();
+
+        const render = () => {
+            if (!tasks.length) {
+                list.innerHTML = '<div class="todo-empty">No tasks yet.</div>';
+                return;
+            }
+
+            list.innerHTML = tasks.map((task) => `
+                <div class="todo-item${task.done ? ' done' : ''}">
+                    <label class="todo-check-row">
+                        <input type="checkbox" data-action="toggle" data-id="${task.id}" ${task.done ? 'checked' : ''}>
+                        <span>${task.text}</span>
+                    </label>
+                    <button type="button" class="files-btn" data-action="remove" data-id="${task.id}">Remove</button>
+                </div>
+            `).join('');
+        };
+
+        form.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const text = input.value.trim();
+            if (!text) return;
+
+            tasks = [
+                ...tasks,
+                {
+                    id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+                    text,
+                    done: false
+                }
+            ];
+            writeTasks(tasks);
+            input.value = '';
+            render();
+            input.focus();
+        });
+
+        list.addEventListener('click', (event) => {
+            const removeButton = event.target.closest('[data-action="remove"]');
+            if (!removeButton || !list.contains(removeButton)) return;
+
+            const targetId = removeButton.getAttribute('data-id');
+            if (!targetId) return;
+
+            tasks = tasks.filter((task) => task.id !== targetId);
+            writeTasks(tasks);
+            render();
+        });
+
+        list.addEventListener('change', (event) => {
+            const toggleInput = event.target.closest('[data-action="toggle"]');
+            if (!toggleInput || !list.contains(toggleInput)) return;
+
+            const targetId = toggleInput.getAttribute('data-id');
+            if (!targetId) return;
+
+            tasks = tasks.map((task) => (
+                task.id === targetId
+                    ? { ...task, done: Boolean(toggleInput.checked) }
+                    : task
+            ));
+            writeTasks(tasks);
+            render();
+        });
+
+        render();
+        input.focus();
+    }
+};
+
+Apps.taskmanager = {
+    title: 'Task Manager',
+    icon: 'fa-solid fa-list-check',
+    getContent() {
+        return TaskManager.getContent();
+    },
+    onOpen(windowId) {
+        TaskManager.init(windowId);
     }
 };
 

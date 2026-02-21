@@ -1,4 +1,8 @@
 const BatteryManager = {
+    batteryRef: null,
+    listenersBound: false,
+    lowBatteryNotified: false,
+
     getBatteryIcon(level, charging) {
         if (charging) {
             return 'fa-solid fa-bolt';
@@ -25,7 +29,11 @@ const BatteryManager = {
     async getBatteryInfo() {
         try {
             if ('getBattery' in navigator) {
-                const battery = await navigator.getBattery();
+                if (!this.batteryRef) {
+                    this.batteryRef = await navigator.getBattery();
+                }
+
+                const battery = this.batteryRef;
                 const level = Math.round(battery.level * 100);
                 const charging = battery.charging;
                 const icon = this.getBatteryIcon(level, charging);
@@ -61,12 +69,27 @@ const BatteryManager = {
         
         const info = await this.getBatteryInfo();
         batteryEl.innerHTML = `<i class="${info.icon}"></i> ${info.level}%`;
+
+        if (!info.charging && info.level <= 20 && !this.lowBatteryNotified) {
+            this.lowBatteryNotified = true;
+            NotificationManager.notify({
+                title: 'Low battery',
+                message: `Battery is at ${info.level}%. Consider connecting power.`,
+                type: 'warning',
+                duration: 5000
+            });
+        }
+
+        if (info.charging || info.level > 25) {
+            this.lowBatteryNotified = false;
+        }
         
-        if ('getBattery' in navigator) {
-            const battery = await navigator.getBattery();
-            
+        if ('getBattery' in navigator && this.batteryRef && !this.listenersBound) {
+            const battery = this.batteryRef;
+
             battery.addEventListener('levelchange', () => this.updateBatteryDisplay());
             battery.addEventListener('chargingchange', () => this.updateBatteryDisplay());
+            this.listenersBound = true;
         }
     }
 };

@@ -1156,3 +1156,372 @@ body {
     padding: 10px 12px;
     color: white;
 }
+
+#notification-center-trigger {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.notification-badge {
+    position: absolute;
+    top: -8px;
+    right: -10px;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 999px;
+    background: #f44336;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    display: none;
+}
+
+.notification-toast-container {
+    position: fixed;
+    right: 16px;
+    bottom: 52px;
+    z-index: 3000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.notification-toast {
+    width: 280px;
+    background: rgba(26, 26, 26, 0.95);
+    color: #f5f5f5;
+    border-radius: 8px;
+    padding: 10px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+    animation: toastIn 0.18s ease-out;
+}
+
+.notification-toast.success {
+    border-left: 4px solid #4caf50;
+}
+
+.notification-toast.warning {
+    border-left: 4px solid #ff9800;
+}
+
+.notification-toast.info {
+    border-left: 4px solid #42a5f5;
+}
+
+.notification-toast.hide {
+    opacity: 0;
+    transform: translateX(8px);
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+.notification-toast-title {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.notification-toast-message {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.86);
+    margin-top: 4px;
+}
+
+.notification-center {
+    width: min(380px, calc(100vw - 24px));
+}
+
+.notification-center-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #fff;
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+.notification-center-actions {
+    display: inline-flex;
+    gap: 6px;
+}
+
+.notification-clear-btn {
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: transparent;
+    color: #fff;
+    border-radius: 6px;
+    padding: 5px 8px;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.notification-clear-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.notification-list {
+    max-height: 360px;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.notification-item {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    padding: 10px;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.notification-item.unread {
+    border-color: rgba(245, 166, 35, 0.65);
+}
+
+.notification-item-title {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.notification-item-message {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.85);
+    margin-top: 4px;
+}
+
+.notification-item-time {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.65);
+    margin-top: 6px;
+}
+
+.notification-empty {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 12px;
+    padding: 12px;
+}
+
+.spotlight-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2800;
+    background: rgba(0, 0, 0, 0.45);
+    display: grid;
+    place-items: start center;
+    padding-top: 80px;
+}
+
+.spotlight-overlay.hidden {
+    display: none;
+}
+
+.spotlight-modal {
+    width: min(640px, calc(100vw - 32px));
+    background: rgba(21, 21, 21, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 12px;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.42);
+    overflow: hidden;
+}
+
+.spotlight-input {
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #fff;
+    font-size: 15px;
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.spotlight-results {
+    max-height: 360px;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.spotlight-result-item {
+    border: 0;
+    background: transparent;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-align: left;
+    padding: 10px 14px;
+    cursor: pointer;
+}
+
+.spotlight-result-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.spotlight-result-item i {
+    width: 20px;
+    text-align: center;
+}
+
+.spotlight-result-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.spotlight-result-label {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.spotlight-result-description {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.spotlight-empty {
+    padding: 14px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 12px;
+}
+
+.task-manager-app {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    color: #333;
+}
+
+.task-manager-toolbar {
+    display: flex;
+    gap: 8px;
+    padding: 12px;
+    border-bottom: 1px solid #ececec;
+    background: #fafafa;
+}
+
+.task-manager-table {
+    padding: 8px 12px 12px;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.task-row {
+    display: grid;
+    grid-template-columns: minmax(180px, 2fr) minmax(120px, 1fr) minmax(110px, 1fr) auto;
+    gap: 10px;
+    align-items: center;
+    border: 1px solid #e6e6e6;
+    border-radius: 8px;
+    padding: 8px 10px;
+}
+
+.task-cell {
+    font-size: 12px;
+    color: #444;
+}
+
+.task-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: #222;
+}
+
+.task-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.task-kill-btn {
+    justify-content: center;
+    min-width: 96px;
+    padding: 6px 10px;
+    font-size: 12px;
+}
+
+.task-manager-empty {
+    font-size: 13px;
+    color: #666;
+    padding: 12px;
+}
+
+.todo-app {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    color: #333;
+}
+
+.todo-toolbar {
+    padding: 12px;
+    border-bottom: 1px solid #ececec;
+    background: #fafafa;
+    display: flex;
+    gap: 8px;
+}
+
+.todo-input {
+    flex: 1;
+    border: 1px solid #cdcdcd;
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-size: 13px;
+}
+
+.todo-list {
+    padding: 10px 12px 12px;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.todo-item {
+    border: 1px solid #e6e6e6;
+    border-radius: 8px;
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.todo-check-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #333;
+}
+
+.todo-item.done .todo-check-row span {
+    text-decoration: line-through;
+    color: #777;
+}
+
+.todo-empty {
+    font-size: 13px;
+    color: #666;
+    padding: 12px;
+}
+
+@keyframes toastIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

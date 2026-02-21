@@ -20,6 +20,7 @@
 
         <div class="right-side">
             <div class="upbar-group">
+                <span class="icon" id="notification-center-trigger" style="cursor: pointer;"><i class="fa-regular fa-bell"></i></span>
                 <span class="icon" onclick="toggleSystemMenu('wifi')" style="cursor: pointer;"><i class="fa-solid fa-wifi"></i></span>
                 <span class="icon" onclick="toggleSystemMenu('volume')" style="cursor: pointer;"><i class="fa-solid fa-volume-high"></i></span>
                 <span class="icon" id="battery-display" onclick="toggleSystemMenu('battery')" style="cursor: pointer;"><i class="fa-solid fa-battery-three-quarters"></i> 87%</span>
@@ -44,6 +45,12 @@
             <div class="dock-item" data-app="calculator" title="Calculator">
                 <i class="fa-solid fa-calculator"></i>
             </div>
+            <div class="dock-item" data-app="todo" title="To-Do List">
+                <i class="fa-solid fa-list-check"></i>
+            </div>
+            <div class="dock-item" data-app="taskmanager" title="Task Manager">
+                <i class="fa-solid fa-list-check"></i>
+            </div>
             <div class="dock-item" data-app="settings" title="Settings">
                 <i class="fa-solid fa-gear"></i>
             </div>
@@ -64,10 +71,14 @@
     <script src="./js/modules/battery-manager.js"></script>
     <script src="./js/modules/calendar-manager.js"></script>
     <script src="./js/modules/system-menu.js"></script>
+    <script src="./js/modules/state-manager.js"></script>
+    <script src="./js/modules/notification-manager.js"></script>
     <script src="./js/modules/window-manager.js"></script>
     <script src="./js/modules/browser-manager.js"></script>
     <script src="./js/modules/files-manager.js"></script>
     <script src="./js/modules/settings-manager.js"></script>
+    <script src="./js/modules/task-manager.js"></script>
+    <script src="./js/modules/spotlight-manager.js"></script>
     <script src="./js/apps.js"></script>
     <script src="./js/main.js"></script>
 </body>

@@ -22,11 +22,6 @@ const SystemMenu = {
                     <span>Guest Network</span>
                     <i class="fa-solid fa-lock" style="margin-left: auto; font-size: 12px;"></i>
                 </div>
-                <div class="menu-divider"></div>
-                <div class="menu-item">
-                    <i class="fa-solid fa-gear"></i>
-                    <span>Network Settings</span>
-                </div>
             `;
         } else if (type === 'volume') {
             menu.innerHTML = `
@@ -73,11 +68,6 @@ const SystemMenu = {
                             <div style="font-size: 11px; color: #999;">${info.status}</div>
                         </div>
                     </div>
-                </div>
-                <div class="menu-divider"></div>
-                <div class="menu-item">
-                    <i class="fa-solid fa-gear"></i>
-                    <span>Power Settings</span>
                 </div>
             `;
             return;

@@ -4,8 +4,11 @@ const WindowManager = {
     zIndexCounter: 100,
     focusedWindow: null,
     windowOrder: [],
+    changeListeners: {},
+    persistTimer: null,
+    isRestoringSession: false,
 
-    createWindow(appId, title, icon, content) {
+    createWindow(appId, title, icon, content, options = {}) {
         this.windowCount++;
         const id = `window-${appId}-${this.windowCount}`;
         const windowEl = document.createElement('div');
@@ -13,13 +16,16 @@ const WindowManager = {
         windowEl.id = id;
         windowEl.setAttribute('data-app-id', appId);
         
-        let left = 40 + (this.windowCount * 30);
-        let top = 60 + (this.windowCount * 30);
+        const state = options.state || null;
+        const left = typeof state?.left === 'number' ? state.left : 40 + (this.windowCount * 30);
+        const top = typeof state?.top === 'number' ? state.top : 60 + (this.windowCount * 30);
+        const width = typeof state?.width === 'number' ? state.width : 500;
+        const height = typeof state?.height === 'number' ? state.height : 400;
         
         windowEl.style.left = left + 'px';
         windowEl.style.top = top + 'px';
-        windowEl.style.width = '500px';
-        windowEl.style.height = '400px';
+        windowEl.style.width = width + 'px';
+        windowEl.style.height = height + 'px';
         
         windowEl.innerHTML = `
             <div class="os-window-header">
@@ -47,15 +53,41 @@ const WindowManager = {
             title,
             icon,
             element: windowEl,
-            minimized: false,
-            maximized: false,
-            originalState: null
+            minimized: Boolean(state?.minimized),
+            maximized: Boolean(state?.maximized),
+            originalState: state?.originalState || null
         };
 
         this.attachWindowEvents(id);
-        this.focusWindow(id);
         this.windowOrder.push(id);
+
+        if (this.windows[id].maximized) {
+            windowEl.classList.add('maximized');
+            windowEl.style.width = '100%';
+            windowEl.style.height = '100%';
+            windowEl.style.left = '0px';
+            windowEl.style.top = '0px';
+            windowEl.style.borderRadius = '0px';
+        }
+
+        if (this.windows[id].minimized) {
+            windowEl.classList.add('minimized');
+        }
+
+        if (typeof state?.zIndex === 'number') {
+            windowEl.style.zIndex = state.zIndex;
+            this.zIndexCounter = Math.max(this.zIndexCounter, state.zIndex);
+        } else {
+            this.focusWindow(id);
+        }
+
+        if (!this.focusedWindow && !this.windows[id].minimized) {
+            this.focusWindow(id);
+        }
+
         this.updateTaskbar();
+        this.schedulePersist();
+        this.emitChange();
 
         return id;
     },
@@ -98,6 +130,7 @@ const WindowManager = {
 
         const handleDragEnd = () => {
             isDragging = false;
+            this.schedulePersist();
         };
 
         header.addEventListener('mousedown', handleHeaderMouseDown);
@@ -160,6 +193,7 @@ const WindowManager = {
 
         const handleResizerEnd = () => {
             isResizing = false;
+            this.schedulePersist();
         };
 
         resizer.addEventListener('mousedown', handleResizerStart);
@@ -185,8 +219,10 @@ const WindowManager = {
         if (!this.windows[id]) return;
 
         if (this.focusedWindow && this.focusedWindow !== id) {
-            const prevEl = this.windows[this.focusedWindow].element;
-            prevEl.classList.remove('focused');
+            const prevWin = this.windows[this.focusedWindow];
+            if (prevWin && prevWin.element) {
+                prevWin.element.classList.remove('focused');
+            }
         }
         
         const windowEl = this.windows[id].element;
@@ -195,23 +231,35 @@ const WindowManager = {
         windowEl.style.zIndex = this.zIndexCounter;
         this.focusedWindow = id;
         this.updateTaskbar();
+        this.schedulePersist();
+        this.emitChange();
     },
 
     minimizeWindow(id) {
+        if (!this.windows[id]) return;
         this.windows[id].minimized = !this.windows[id].minimized;
         this.windows[id].element.classList.toggle('minimized');
         this.updateTaskbar();
+        this.schedulePersist();
+        this.emitChange();
     },
 
     toggleMaximizeWindow(id) {
         const win = this.windows[id];
-        const wm = document.getElementById('window-manager');
+        if (!win) return;
         
         if (win.maximized) {
-            win.element.style.width = win.originalState.width + 'px';
-            win.element.style.height = win.originalState.height + 'px';
-            win.element.style.left = win.originalState.left + 'px';
-            win.element.style.top = win.originalState.top + 'px';
+            const fallbackState = {
+                width: 500,
+                height: 400,
+                left: 40,
+                top: 60
+            };
+            const targetState = win.originalState || fallbackState;
+            win.element.style.width = targetState.width + 'px';
+            win.element.style.height = targetState.height + 'px';
+            win.element.style.left = targetState.left + 'px';
+            win.element.style.top = targetState.top + 'px';
             win.element.classList.remove('maximized');
             win.element.style.borderRadius = '8px 8px 4px 4px';
             win.maximized = false;
@@ -230,9 +278,20 @@ const WindowManager = {
             win.element.style.borderRadius = '0px';
             win.maximized = true;
         }
+
+        this.schedulePersist();
+        this.emitChange();
     },
 
     closeWindow(id) {
+        if (!this.windows[id]) return;
+
+        if (typeof TaskManager !== 'undefined' && TaskManager.refreshTimers && TaskManager.refreshTimers[id]) {
+            clearInterval(TaskManager.refreshTimers[id]);
+            delete TaskManager.refreshTimers[id];
+        }
+
+        this.removeChangeListener(id);
         this.windows[id].element.remove();
         delete this.windows[id];
         this.windowOrder = this.windowOrder.filter(wId => wId !== id);
@@ -243,10 +302,122 @@ const WindowManager = {
             }
         }
         this.updateTaskbar();
+        this.schedulePersist();
+        this.emitChange();
+    },
+
+    closeAllWindows(options = {}) {
+        const exclude = new Set(options.exclude || []);
+        Object.keys(this.windows).forEach((id) => {
+            if (!exclude.has(id)) {
+                this.closeWindow(id);
+            }
+        });
+        this.schedulePersist();
+        this.emitChange();
+    },
+
+    getWindowList() {
+        return Object.values(this.windows).map((win) => ({
+            id: win.id,
+            appId: win.appId,
+            title: win.title,
+            icon: win.icon,
+            minimized: Boolean(win.minimized),
+            maximized: Boolean(win.maximized),
+            zIndex: Number(win.element?.style.zIndex || 0)
+        }));
+    },
+
+    addChangeListener(listenerId, callback) {
+        if (!listenerId || typeof callback !== 'function') return;
+        this.changeListeners[listenerId] = callback;
+    },
+
+    removeChangeListener(listenerId) {
+        if (!listenerId) return;
+        delete this.changeListeners[listenerId];
+    },
+
+    emitChange() {
+        Object.values(this.changeListeners).forEach((callback) => {
+            try {
+                callback(this.getWindowList());
+            } catch (error) {
+                console.error('WindowManager listener error:', error);
+            }
+        });
+    },
+
+    buildSessionSnapshot() {
+        const focused = this.focusedWindow ? this.windows[this.focusedWindow] : null;
+        return {
+            focusedAppId: focused?.appId || null,
+            zIndexCounter: this.zIndexCounter,
+            windows: this.windowOrder
+                .map((id) => this.windows[id])
+                .filter(Boolean)
+                .map((win) => ({
+                    appId: win.appId,
+                    title: win.title,
+                    icon: win.icon,
+                    left: parseInt(win.element.style.left, 10) || 0,
+                    top: parseInt(win.element.style.top, 10) || 0,
+                    width: parseInt(win.element.style.width, 10) || win.element.offsetWidth || 500,
+                    height: parseInt(win.element.style.height, 10) || win.element.offsetHeight || 400,
+                    minimized: Boolean(win.minimized),
+                    maximized: Boolean(win.maximized),
+                    originalState: win.originalState || null,
+                    zIndex: parseInt(win.element.style.zIndex, 10) || 0
+                }))
+        };
+    },
+
+    schedulePersist() {
+        if (this.isRestoringSession) return;
+
+        clearTimeout(this.persistTimer);
+        this.persistTimer = setTimeout(() => {
+            const snapshot = this.buildSessionSnapshot();
+            StateManager.saveDesktopSession(snapshot);
+        }, 120);
+    },
+
+    restoreSession() {
+        const session = StateManager.loadDesktopSession();
+        if (!session || !Array.isArray(session.windows) || !session.windows.length) {
+            return;
+        }
+
+        this.isRestoringSession = true;
+
+        session.windows.forEach((state) => {
+            if (!state?.appId || !Apps[state.appId]) return;
+            Apps.launchApp(state.appId, { state, skipPersist: true });
+        });
+
+        if (session.focusedAppId) {
+            const target = this.windowOrder
+                .slice()
+                .reverse()
+                .find((id) => this.windows[id]?.appId === session.focusedAppId);
+            if (target) {
+                this.focusWindow(target);
+            }
+        }
+
+        if (typeof session.zIndexCounter === 'number') {
+            this.zIndexCounter = Math.max(this.zIndexCounter, session.zIndexCounter);
+        }
+
+        this.isRestoringSession = false;
+        this.schedulePersist();
+        this.emitChange();
     },
 
     updateTaskbar() {
         const taskbar = document.getElementById('taskbar');
+        if (!taskbar) return;
         taskbar.innerHTML = '';
 
         for (const id in this.windows) {
@@ -278,13 +449,20 @@ const WindowManager = {
 
 const Apps = {};
 
-Apps.launchApp = function(appId) {
+Apps.launchApp = function(appId, options = {}) {
     const app = Apps[appId];
     if (!app) return;
 
-    const windowId = WindowManager.createWindow(appId, app.title, app.icon, app.getContent());
+    const windowId = WindowManager.createWindow(appId, app.title, app.icon, app.getContent(), {
+        state: options.state || null
+    });
+
     if (typeof app.onOpen === 'function') {
         app.onOpen(windowId);
+    }
+
+    if (!options.skipPersist) {
+        WindowManager.schedulePersist();
     }
 
     return windowId;

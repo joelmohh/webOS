@@ -108,6 +108,11 @@ const FilesManager = {
                 link.download = `${title.replace(/\s+/g, '_')}.txt`;
                 link.click();
                 URL.revokeObjectURL(link.href);
+                NotificationManager.notify({
+                    title: 'Download complete',
+                    message: `${link.download} was downloaded from Files.`,
+                    type: 'success'
+                });
             }));
 
             const body = document.createElement('pre');
@@ -139,6 +144,11 @@ const FilesManager = {
                     link.download = file.name;
                     link.click();
                     URL.revokeObjectURL(url);
+                    NotificationManager.notify({
+                        title: 'Download complete',
+                        message: `${file.name} download finished.`,
+                        type: 'success'
+                    });
                 }));
 
                 const image = document.createElement('img');
@@ -167,6 +177,11 @@ const FilesManager = {
                         link.download = file.name;
                         link.click();
                         URL.revokeObjectURL(url);
+                        NotificationManager.notify({
+                            title: 'Download complete',
+                            message: `${file.name} download finished.`,
+                            type: 'success'
+                        });
                     }));
                     previewEl.insertBefore(actions, previewEl.children[1]);
                 };
@@ -185,6 +200,11 @@ const FilesManager = {
                 link.download = file.name;
                 link.click();
                 URL.revokeObjectURL(url);
+                NotificationManager.notify({
+                    title: 'Download complete',
+                    message: `${file.name} download finished.`,
+                    type: 'success'
+                });
             }));
             previewEl.appendChild(actions);
         };
@@ -295,6 +315,14 @@ const FilesManager = {
 
             fileInput.value = '';
             renderImportedFiles();
+
+            if (files.length > 0) {
+                NotificationManager.notify({
+                    title: 'Import complete',
+                    message: `${files.length} file${files.length > 1 ? 's' : ''} imported to Files.`,
+                    type: 'info'
+                });
+            }
         });
 
         renderSavedNotes();
