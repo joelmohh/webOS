@@ -2,6 +2,8 @@ const NotificationManager = {
     notifications: [],
     nextId: 1,
     unreadCount: 0,
+    activeType: 'all',
+    searchQuery: '',
 
     init() {
         if (!document.getElementById('notification-toast-container')) {
@@ -17,11 +19,13 @@ const NotificationManager = {
     notify({ title, message, type = 'info', duration = 3200 } = {}) {
         if (!title && !message) return;
 
+        const normalizedType = ['info', 'success', 'warning', 'error'].includes(type) ? type : 'info';
+
         const notification = {
             id: this.nextId++,
             title: title || 'System',
             message: message || '',
-            type,
+            type: normalizedType,
             createdAt: Date.now(),
             read: false
         };
@@ -67,6 +71,14 @@ const NotificationManager = {
         this.renderCenter();
     },
 
+    removeById(id) {
+        if (!id) return;
+        this.notifications = this.notifications.filter((notification) => notification.id !== id);
+        this.unreadCount = this.notifications.filter((notification) => !notification.read).length;
+        this.updateBadge();
+        this.renderCenter();
+    },
+
     toggleCenter(anchorEl) {
         const existing = document.getElementById('notification-center');
         if (existing) {
@@ -85,6 +97,16 @@ const NotificationManager = {
                     <button type="button" class="notification-clear-btn" data-role="notification-clear">Clear</button>
                 </div>
             </div>
+            <div class="notification-center-toolbar">
+                <input type="text" class="notification-search" data-role="notification-search" placeholder="Search notifications" aria-label="Search notifications">
+                <div class="notification-filters" data-role="notification-filters">
+                    <button type="button" class="notification-filter-btn active" data-filter="all">All</button>
+                    <button type="button" class="notification-filter-btn" data-filter="info">Info</button>
+                    <button type="button" class="notification-filter-btn" data-filter="success">Success</button>
+                    <button type="button" class="notification-filter-btn" data-filter="warning">Warning</button>
+                    <button type="button" class="notification-filter-btn" data-filter="error">Error</button>
+                </div>
+            </div>
             <div class="notification-list" data-role="notification-list"></div>
         `;
 
@@ -96,8 +118,35 @@ const NotificationManager = {
 
         const markReadButton = panel.querySelector('[data-role="notification-read"]');
         const clearButton = panel.querySelector('[data-role="notification-clear"]');
+        const searchInput = panel.querySelector('[data-role="notification-search"]');
         markReadButton?.addEventListener('click', () => this.markAllRead());
         clearButton?.addEventListener('click', () => this.clearAll());
+
+        searchInput?.addEventListener('input', () => {
+            this.searchQuery = searchInput.value.trim().toLowerCase();
+            this.renderCenter();
+        });
+
+        panel.addEventListener('click', (event) => {
+            const target = event.target;
+            if (!(target instanceof Element)) return;
+
+            const filterBtn = target.closest('[data-filter]');
+            if (filterBtn) {
+                const filter = filterBtn.getAttribute('data-filter') || 'all';
+                this.activeType = filter;
+                this.renderCenter();
+                return;
+            }
+
+            const removeBtn = target.closest('[data-action="notification-remove"]');
+            if (!removeBtn) return;
+
+            const rawId = removeBtn.getAttribute('data-id');
+            const id = Number(rawId);
+            if (!Number.isFinite(id)) return;
+            this.removeById(id);
+        });
 
         this.notifications.forEach((notification) => {
             notification.read = true;
@@ -131,22 +180,42 @@ const NotificationManager = {
         if (!panel) return;
 
         const list = panel.querySelector('[data-role="notification-list"]');
+        const filtersWrap = panel.querySelector('[data-role="notification-filters"]');
         if (!list) return;
 
-        if (!this.notifications.length) {
+        filtersWrap?.querySelectorAll('[data-filter]').forEach((button) => {
+            if (!(button instanceof HTMLElement)) return;
+            const isActive = button.getAttribute('data-filter') === this.activeType;
+            button.classList.toggle('active', isActive);
+        });
+
+        const filteredNotifications = this.notifications
+            .filter((notification) => this.activeType === 'all' || notification.type === this.activeType)
+            .filter((notification) => {
+                if (!this.searchQuery) return true;
+                const stack = `${notification.title} ${notification.message}`.toLowerCase();
+                return stack.includes(this.searchQuery);
+            });
+
+        if (!filteredNotifications.length) {
             list.innerHTML = '<div class="notification-empty">No notifications yet.</div>';
             return;
         }
 
-        list.innerHTML = this.notifications
+        list.innerHTML = filteredNotifications
             .slice(0, 50)
             .map((notification) => {
                 const time = new Date(notification.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
                 return `
                     <article class="notification-item ${notification.read ? '' : 'unread'}">
-                        <div class="notification-item-title">${notification.title}</div>
+                        <div class="notification-item-top">
+                            <div class="notification-item-title">${notification.title}</div>
+                            <button type="button" class="notification-item-remove" data-action="notification-remove" data-id="${notification.id}" aria-label="Remove notification">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
                         <div class="notification-item-message">${notification.message}</div>
-                        <div class="notification-item-time">${time}</div>
+                        <div class="notification-item-time">${time} • ${notification.type}</div>
                     </article>
                 `;
             })

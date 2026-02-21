@@ -361,6 +361,9 @@ const WindowManager = {
                     appId: win.appId,
                     title: win.title,
                     icon: win.icon,
+                    appSession: (typeof Apps[win.appId]?.getSessionState === 'function')
+                        ? (Apps[win.appId].getSessionState(win.id) || null)
+                        : null,
                     left: parseInt(win.element.style.left, 10) || 0,
                     top: parseInt(win.element.style.top, 10) || 0,
                     width: parseInt(win.element.style.width, 10) || win.element.offsetWidth || 500,
@@ -458,7 +461,7 @@ Apps.launchApp = function(appId, options = {}) {
     });
 
     if (typeof app.onOpen === 'function') {
-        app.onOpen(windowId);
+        app.onOpen(windowId, { state: options.state || null });
     }
 
     if (!options.skipPersist) {

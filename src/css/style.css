@@ -605,6 +605,11 @@ body {
     gap: 8px;
 }
 
+.browser-subtoolbar-row {
+    margin-top: 8px;
+    gap: 6px;
+}
+
 .browser-tool-btn {
     width: 34px;
     height: 34px;
@@ -659,6 +664,67 @@ body {
 
 .browser-go:hover {
     background: #ececec;
+}
+
+.browser-tabs {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    overflow-x: auto;
+    padding-bottom: 2px;
+}
+
+.browser-tab {
+    border: 1px solid #cfcfcf;
+    background: #f7f7f7;
+    border-radius: 8px;
+    height: 32px;
+    padding: 0 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #333;
+    cursor: pointer;
+    max-width: 220px;
+}
+
+.browser-tab.active {
+    background: #ffffff;
+    border-color: #bbbbbb;
+}
+
+.browser-tab-label {
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+}
+
+.browser-tab-close {
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+}
+
+.browser-tab-close:hover {
+    background: #ececec;
+}
+
+.browser-select {
+    border: 1px solid #cfcfcf;
+    border-radius: 8px;
+    background: #fff;
+    color: #333;
+    font-size: 12px;
+    padding: 6px 8px;
+    min-width: 118px;
+    max-width: 160px;
 }
 
 .browser-frame-wrap {
@@ -1270,6 +1336,48 @@ body {
     gap: 8px;
 }
 
+.notification-center-toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.notification-search {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    border-radius: 7px;
+    padding: 6px 9px;
+    font-size: 12px;
+}
+
+.notification-search::placeholder {
+    color: rgba(255, 255, 255, 0.62);
+}
+
+.notification-filters {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.notification-filter-btn {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: transparent;
+    color: rgba(255, 255, 255, 0.88);
+    border-radius: 999px;
+    padding: 4px 8px;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.notification-filter-btn.active {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.35);
+    color: #fff;
+}
+
 .notification-item {
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 8px;
@@ -1280,6 +1388,27 @@ body {
 
 .notification-item.unread {
     border-color: rgba(245, 166, 35, 0.65);
+}
+
+.notification-item-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.notification-item-remove {
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: transparent;
+    color: rgba(255, 255, 255, 0.88);
+    border-radius: 6px;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+}
+
+.notification-item-remove:hover {
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .notification-item-title {
@@ -1415,7 +1544,7 @@ body {
 
 .task-row {
     display: grid;
-    grid-template-columns: minmax(180px, 2fr) minmax(120px, 1fr) minmax(110px, 1fr) auto;
+    grid-template-columns: minmax(160px, 2fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(90px, 1fr) minmax(90px, 1fr) auto;
     gap: 10px;
     align-items: center;
     border: 1px solid #e6e6e6;
@@ -1470,6 +1599,36 @@ body {
     gap: 8px;
 }
 
+.todo-controls {
+    padding: 10px 12px;
+    border-bottom: 1px solid #ececec;
+    background: #fdfdfd;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.todo-filters {
+    display: inline-flex;
+    gap: 6px;
+}
+
+.todo-filter-btn {
+    border: 1px solid #cdcdcd;
+    background: #fff;
+    color: #333;
+    border-radius: 999px;
+    padding: 5px 10px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.todo-filter-btn.active {
+    background: #f1f1f1;
+    border-color: #bdbdbd;
+}
+
 .todo-input {
     flex: 1;
     border: 1px solid #cdcdcd;
@@ -1494,6 +1653,11 @@ body {
     align-items: center;
     justify-content: space-between;
     gap: 10px;
+}
+
+.todo-actions {
+    display: inline-flex;
+    gap: 6px;
 }
 
 .todo-check-row {

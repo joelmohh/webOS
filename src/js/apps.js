@@ -324,8 +324,11 @@ Apps.browser = {
     getContent() {
         return BrowserManager.getContent();
     },
-    onOpen(windowId) {
-        BrowserManager.init(windowId);
+    onOpen(windowId, options = {}) {
+        BrowserManager.init(windowId, options.state?.appSession || null);
+    },
+    getSessionState(windowId) {
+        return BrowserManager.getSessionState(windowId);
     }
 };
 
@@ -476,6 +479,7 @@ Apps.calculator = {
 Apps.todo = {
     title: 'To-Do List',
     icon: 'fa-solid fa-list-check',
+    sessionState: {},
     getContent() {
         return `
             <div class="todo-app">
@@ -483,21 +487,32 @@ Apps.todo = {
                     <input type="text" class="todo-input" data-role="todo-input" placeholder="Add a task..." aria-label="New task">
                     <button type="submit" class="files-btn">Add</button>
                 </form>
+                <div class="todo-controls">
+                    <div class="todo-filters" data-role="todo-filters">
+                        <button type="button" class="todo-filter-btn active" data-filter="all">All</button>
+                        <button type="button" class="todo-filter-btn" data-filter="active">Active</button>
+                        <button type="button" class="todo-filter-btn" data-filter="done">Done</button>
+                    </div>
+                    <button type="button" class="files-btn" data-role="todo-clear-completed">Clear completed</button>
+                </div>
                 <div class="todo-list" data-role="todo-list"></div>
             </div>
         `;
     },
-    onOpen(windowId) {
+    onOpen(windowId, options = {}) {
         const windowEl = document.getElementById(windowId);
         if (!windowEl) return;
 
         const form = windowEl.querySelector('[data-role="todo-form"]');
         const input = windowEl.querySelector('[data-role="todo-input"]');
         const list = windowEl.querySelector('[data-role="todo-list"]');
+        const filtersWrap = windowEl.querySelector('[data-role="todo-filters"]');
+        const clearCompletedBtn = windowEl.querySelector('[data-role="todo-clear-completed"]');
 
-        if (!form || !input || !list) return;
+        if (!form || !input || !list || !filtersWrap || !clearCompletedBtn) return;
 
         const storageKey = 'joelmos.todo.tasks';
+        const filterStorageKey = 'joelmos.todo.filter';
 
         const readTasks = () => {
             try {
@@ -514,20 +529,54 @@ Apps.todo = {
         };
 
         let tasks = readTasks();
+        let filter = options.state?.appSession?.filter || localStorage.getItem(filterStorageKey) || 'all';
+        if (!['all', 'active', 'done'].includes(filter)) {
+            filter = 'all';
+        }
+
+        const setFilter = (nextFilter) => {
+            filter = nextFilter;
+            localStorage.setItem(filterStorageKey, filter);
+            this.sessionState[windowId] = { filter };
+        };
+
+        const getFilteredTasks = () => {
+            if (filter === 'active') {
+                return tasks.filter((task) => !task.done);
+            }
+
+            if (filter === 'done') {
+                return tasks.filter((task) => task.done);
+            }
+
+            return tasks;
+        };
 
         const render = () => {
-            if (!tasks.length) {
+            const visibleTasks = getFilteredTasks();
+
+            filtersWrap.querySelectorAll('[data-filter]').forEach((button) => {
+                if (!(button instanceof HTMLElement)) return;
+                button.classList.toggle('active', button.getAttribute('data-filter') === filter);
+            });
+
+            clearCompletedBtn.disabled = !tasks.some((task) => task.done);
+
+            if (!visibleTasks.length) {
                 list.innerHTML = '<div class="todo-empty">No tasks yet.</div>';
                 return;
             }
 
-            list.innerHTML = tasks.map((task) => `
+            list.innerHTML = visibleTasks.map((task) => `
                 <div class="todo-item${task.done ? ' done' : ''}">
                     <label class="todo-check-row">
                         <input type="checkbox" data-action="toggle" data-id="${task.id}" ${task.done ? 'checked' : ''}>
                         <span>${task.text}</span>
                     </label>
-                    <button type="button" class="files-btn" data-action="remove" data-id="${task.id}">Remove</button>
+                    <div class="todo-actions">
+                        <button type="button" class="files-btn" data-action="edit" data-id="${task.id}">Edit</button>
+                        <button type="button" class="files-btn" data-action="remove" data-id="${task.id}">Remove</button>
+                    </div>
                 </div>
             `).join('');
         };
@@ -552,7 +601,34 @@ Apps.todo = {
         });
 
         list.addEventListener('click', (event) => {
-            const removeButton = event.target.closest('[data-action="remove"]');
+            const target = event.target;
+            if (!(target instanceof Element)) return;
+
+            const editButton = target.closest('[data-action="edit"]');
+            if (editButton && list.contains(editButton)) {
+                const targetId = editButton.getAttribute('data-id');
+                if (!targetId) return;
+
+                const current = tasks.find((task) => task.id === targetId);
+                if (!current) return;
+
+                const nextText = window.prompt('Edit task', current.text);
+                if (nextText === null) return;
+
+                const trimmed = nextText.trim();
+                if (!trimmed) return;
+
+                tasks = tasks.map((task) => (
+                    task.id === targetId
+                        ? { ...task, text: trimmed }
+                        : task
+                ));
+                writeTasks(tasks);
+                render();
+                return;
+            }
+
+            const removeButton = target.closest('[data-action="remove"]');
             if (!removeButton || !list.contains(removeButton)) return;
 
             const targetId = removeButton.getAttribute('data-id');
@@ -564,7 +640,10 @@ Apps.todo = {
         });
 
         list.addEventListener('change', (event) => {
-            const toggleInput = event.target.closest('[data-action="toggle"]');
+            const target = event.target;
+            if (!(target instanceof Element)) return;
+
+            const toggleInput = target.closest('[data-action="toggle"]');
             if (!toggleInput || !list.contains(toggleInput)) return;
 
             const targetId = toggleInput.getAttribute('data-id');
@@ -579,8 +658,32 @@ Apps.todo = {
             render();
         });
 
+        filtersWrap.addEventListener('click', (event) => {
+            const target = event.target;
+            if (!(target instanceof Element)) return;
+
+            const button = target.closest('[data-filter]');
+            if (!button || !filtersWrap.contains(button)) return;
+
+            const nextFilter = button.getAttribute('data-filter');
+            if (!nextFilter || !['all', 'active', 'done'].includes(nextFilter)) return;
+
+            setFilter(nextFilter);
+            render();
+        });
+
+        clearCompletedBtn.addEventListener('click', () => {
+            tasks = tasks.filter((task) => !task.done);
+            writeTasks(tasks);
+            render();
+        });
+
+        setFilter(filter);
         render();
         input.focus();
+    },
+    getSessionState(windowId) {
+        return this.sessionState[windowId] || null;
     }
 };
 
