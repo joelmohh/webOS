@@ -317,17 +317,21 @@ Apps.browser = {
     title: 'Browser',
     icon: 'fa-solid fa-globe',
     getContent() {
-        return `
-            <div style="display: flex; flex-direction: column; height: 100%;">
-                <div style="background: #f0f0f0; padding: 0; border-bottom: 1px solid #ddd;">
-                    <input type="text" placeholder="Enter URL..." style="width: 100%; padding: 0; border: 1px solid #ccc; border-radius: 0;">
-                </div>
-                <div style="flex: 1; padding: 0; overflow: auto;">
-                    <h2 style="color: #333; margin-bottom: 0;">Welcome to Browser</h2>
-                    <p style="color: #666;">Type a URL to navigate</p>
-                </div>
-            </div>
-        `;
+        return BrowserManager.getContent();
+    },
+    onOpen(windowId) {
+        BrowserManager.init(windowId);
+    }
+};
+
+Apps.files = {
+    title: 'Files',
+    icon: 'fa-solid fa-folder',
+    getContent() {
+        return FilesManager.getContent();
+    },
+    onOpen(windowId) {
+        FilesManager.init(windowId);
     }
 };
 
@@ -336,28 +340,182 @@ Apps.calculator = {
     icon: 'fa-solid fa-calculator',
     getContent() {
         return `
-            <div style="display: flex; flex-direction: column; height: 100%; gap: 0;">
-                <input type="text" class="calc-display" readonly value="0">
+            <div class="calc-app">
+                <input type="text" class="calc-display" data-role="calc-display" readonly value="0" aria-label="Calculator display">
                 <div class="calculator-grid">
-                    <button class="calc-btn clear">AC</button>
-                    <button class="calc-btn operator">/</button>
-                    <button class="calc-btn operator">×</button>
-                    <button class="calc-btn">7</button>
-                    <button class="calc-btn">8</button>
-                    <button class="calc-btn">9</button>
-                    <button class="calc-btn operator">−</button>
-                    <button class="calc-btn">4</button>
-                    <button class="calc-btn">5</button>
-                    <button class="calc-btn">6</button>
-                    <button class="calc-btn operator">+</button>
-                    <button class="calc-btn">1</button>
-                    <button class="calc-btn">2</button>
-                    <button class="calc-btn">3</button>
-                    <button class="calc-btn operator">.</button>
-                    <button class="calc-btn" style="grid-column: span 2;">0</button>
-                    <button class="calc-btn equals">=</button>
+                    <button class="calc-btn clear" data-action="clear">AC</button>
+                    <button class="calc-btn operator" data-value="/">/</button>
+                    <button class="calc-btn operator" data-value="*">×</button>
+                    <button class="calc-btn" data-value="7">7</button>
+                    <button class="calc-btn" data-value="8">8</button>
+                    <button class="calc-btn" data-value="9">9</button>
+                    <button class="calc-btn operator" data-value="-">−</button>
+                    <button class="calc-btn" data-value="4">4</button>
+                    <button class="calc-btn" data-value="5">5</button>
+                    <button class="calc-btn" data-value="6">6</button>
+                    <button class="calc-btn operator" data-value="+">+</button>
+                    <button class="calc-btn" data-value="1">1</button>
+                    <button class="calc-btn" data-value="2">2</button>
+                    <button class="calc-btn" data-value="3">3</button>
+                    <button class="calc-btn operator" data-value=".">.</button>
+                    <button class="calc-btn" style="grid-column: span 2;" data-value="0">0</button>
+                    <button class="calc-btn equals" data-action="equals">=</button>
                 </div>
             </div>
         `;
+    },
+    onOpen(windowId) {
+        const windowEl = document.getElementById(windowId);
+        if (!windowEl) return;
+
+        const display = windowEl.querySelector('[data-role="calc-display"]');
+        const buttons = windowEl.querySelectorAll('.calc-btn');
+        if (!display || !buttons.length) return;
+
+        let expression = '0';
+
+        const render = () => {
+            display.value = expression;
+        };
+
+        const isOperator = (char) => ['+', '-', '*', '/'].includes(char);
+
+        const lastNumberHasDot = () => {
+            const parts = expression.split(/[+\-*/]/);
+            return (parts[parts.length - 1] || '').includes('.');
+        };
+
+        const clearAll = () => {
+            expression = '0';
+            render();
+        };
+
+        const appendValue = (value) => {
+            if (/\d/.test(value)) {
+                expression = expression === '0' ? value : expression + value;
+                render();
+                return;
+            }
+
+            if (value === '.') {
+                if (lastNumberHasDot()) return;
+                const lastChar = expression[expression.length - 1];
+                if (isOperator(lastChar)) {
+                    expression += '0.';
+                } else {
+                    expression += '.';
+                }
+                render();
+                return;
+            }
+
+            if (isOperator(value)) {
+                const lastChar = expression[expression.length - 1];
+                if (isOperator(lastChar)) {
+                    expression = expression.slice(0, -1) + value;
+                } else {
+                    expression += value;
+                }
+                render();
+            }
+        };
+
+        const calculate = () => {
+            try {
+                const sanitized = expression.replace(/[^0-9+\-*/.]/g, '');
+                if (!sanitized) {
+                    clearAll();
+                    return;
+                }
+
+                const result = Function(`return (${sanitized})`)();
+                if (!Number.isFinite(result)) {
+                    display.value = 'Error';
+                    expression = '0';
+                    return;
+                }
+
+                expression = String(parseFloat(result.toFixed(10)));
+                render();
+            } catch {
+                display.value = 'Error';
+                expression = '0';
+            }
+        };
+
+        buttons.forEach((button) => {
+            button.addEventListener('click', () => {
+                const action = button.getAttribute('data-action');
+                const value = button.getAttribute('data-value');
+
+                if (action === 'clear') {
+                    clearAll();
+                    return;
+                }
+
+                if (action === 'equals') {
+                    calculate();
+                    return;
+                }
+
+                if (value) {
+                    appendValue(value);
+                }
+            });
+        });
+
+        render();
+    }
+};
+
+Apps.settings = {
+    title: 'Settings',
+    icon: 'fa-solid fa-gear',
+    getContent() {
+        return `
+            <div class="settings-app">
+                <div class="setting-group">
+                    <h3>Desktop</h3>
+                    <div class="setting-item">
+                        <label for="wallpaper-select">Wallpaper</label>
+                        <select id="wallpaper-select" class="settings-select" data-role="wallpaper-select"></select>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <h3>Clock</h3>
+                    <div class="setting-item">
+                        <label for="clock-seconds-toggle">Show seconds in top bar</label>
+                        <input id="clock-seconds-toggle" data-role="clock-seconds-toggle" type="checkbox">
+                    </div>
+                </div>
+
+                <p class="settings-note">Changes are applied immediately and saved automatically.</p>
+            </div>
+        `;
+    },
+    onOpen(windowId) {
+        const windowEl = document.getElementById(windowId);
+        if (!windowEl) return;
+
+        const wallpaperSelect = windowEl.querySelector('[data-role="wallpaper-select"]');
+        const secondsToggle = windowEl.querySelector('[data-role="clock-seconds-toggle"]');
+
+        if (!wallpaperSelect || !secondsToggle) return;
+
+        wallpaperSelect.innerHTML = SettingsManager.wallpapers
+            .map((wallpaper) => `<option value="${wallpaper.id}">${wallpaper.name}</option>`)
+            .join('');
+
+        wallpaperSelect.value = SettingsManager.getWallpaperId();
+        secondsToggle.checked = SettingsManager.getShowSeconds();
+
+        wallpaperSelect.addEventListener('change', () => {
+            SettingsManager.setWallpaper(wallpaperSelect.value);
+        });
+
+        secondsToggle.addEventListener('change', () => {
+            SettingsManager.setShowSeconds(secondsToggle.checked);
+        });
     }
 };

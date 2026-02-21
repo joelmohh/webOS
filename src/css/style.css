@@ -281,10 +281,212 @@ body {
     text-align: center;
 }
 
+.apps-menu-popup {
+    min-width: 320px;
+    max-width: 420px;
+}
+
+.apps-menu-title {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #f3f3f3;
+}
+
+.apps-menu-popup .app-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.apps-menu-popup .app-icon-item {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #f5f5f5;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.apps-menu-popup .app-icon-item:hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: none;
+}
+
+.apps-menu-popup .app-icon-item i {
+    font-size: 24px;
+}
+
+.apps-menu-popup .app-icon-item span {
+    font-size: 12px;
+}
+
 .file-list {
     display: flex;
     flex-direction: column;
     gap: 0;
+}
+
+.files-app {
+    height: 100%;
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    background: #ffffff;
+}
+
+.files-sidebar {
+    border-right: 1px solid #e8e8e8;
+    background: #fbfbfb;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+}
+
+.files-toolbar {
+    padding: 12px;
+    border-bottom: 1px solid #ececec;
+}
+
+.files-btn {
+    border: 1px solid #cdcdcd;
+    background: #fff;
+    color: #333;
+    border-radius: 6px;
+    padding: 7px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.files-btn:hover {
+    background: #f1f1f1;
+}
+
+.files-input {
+    display: none;
+}
+
+.files-section {
+    padding: 10px 12px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.files-section h3 {
+    margin-bottom: 8px;
+    font-size: 13px;
+    color: #444;
+}
+
+.files-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.files-item {
+    border: 1px solid #e1e1e1;
+    background: #fff;
+    border-radius: 8px;
+    padding: 8px;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    color: #333;
+}
+
+.files-item:hover {
+    background: #f5f7fb;
+    border-color: #d6deee;
+}
+
+.files-item i {
+    font-size: 18px;
+    color: #5a6b8a;
+}
+
+.files-item-text {
+    min-width: 0;
+}
+
+.files-item-title {
+    font-size: 13px;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.files-item-meta {
+    font-size: 11px;
+    color: #666;
+    margin-top: 2px;
+}
+
+.files-list-empty {
+    font-size: 12px;
+    color: #777;
+    padding: 8px 2px;
+}
+
+.files-preview {
+    padding: 16px;
+    overflow: auto;
+    background: #ffffff;
+    color: #333;
+}
+
+.files-empty {
+    height: 100%;
+    display: grid;
+    place-items: center;
+    color: #777;
+    font-size: 14px;
+}
+
+.files-preview-header h2 {
+    font-size: 20px;
+    margin-bottom: 4px;
+}
+
+.files-preview-header span {
+    color: #666;
+    font-size: 13px;
+}
+
+.files-preview-actions {
+    margin: 12px 0;
+    display: flex;
+    gap: 8px;
+}
+
+.files-preview-text {
+    margin-top: 10px;
+    background: #f8f9fb;
+    border: 1px solid #e8ebf2;
+    border-radius: 8px;
+    padding: 12px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 13px;
+    line-height: 1.5;
+    max-height: calc(100% - 90px);
+    overflow: auto;
+}
+
+.files-preview-image {
+    display: block;
+    max-width: 100%;
+    max-height: calc(100% - 120px);
+    border: 1px solid #e7e7e7;
+    border-radius: 8px;
+    margin-top: 12px;
+}
+
+.files-meta {
+    margin-top: 12px;
+    color: #555;
+    font-size: 13px;
 }
 
 .file-item {
@@ -315,6 +517,14 @@ body {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 8px;
+}
+
+.calc-app {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+    gap: 10px;
 }
 
 .calc-btn {
@@ -374,6 +584,104 @@ body {
     border: 1px solid #555;
     overflow: hidden;
     white-space: nowrap;
+}
+
+.browser-app {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+}
+
+.browser-toolbar {
+    padding: 8px;
+    border-bottom: 1px solid #dedede;
+    background: linear-gradient(to bottom, #f8f8f8, #ececec);
+}
+
+.browser-toolbar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.browser-tool-btn {
+    width: 34px;
+    height: 34px;
+    border: 1px solid #cfcfcf;
+    border-radius: 6px;
+    background: #fff;
+    color: #555;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+}
+
+.browser-tool-btn:hover {
+    background: #efefef;
+}
+
+.browser-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+.browser-address {
+    flex: 1;
+    min-width: 160px;
+    border: 1px solid #cfcfcf;
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-size: 13px;
+    color: #333;
+    background: #ffffff;
+}
+
+.browser-address:focus {
+    outline: none;
+    border-color: #b8b8b8;
+}
+
+.browser-go {
+    border: 1px solid #c9c9c9;
+    background: #ffffff;
+    color: #333;
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.browser-go:hover {
+    background: #ececec;
+}
+
+.browser-frame-wrap {
+    flex: 1;
+    background: #ffffff;
+    border-top: 1px solid #efefef;
+}
+
+.browser-frame {
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+.browser-status {
+    height: 26px;
+    border-top: 1px solid #e7e7e7;
+    background: #f9f9f9;
+    color: #666;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
 }
 
 .os-window[data-app-id="notepad"] .os-window-content {
@@ -535,6 +843,28 @@ body {
     margin-bottom: 20px;
     padding-bottom: 15px;
     border-bottom: 1px solid #e0e0e0;
+}
+
+.settings-app {
+    height: 100%;
+    padding: 16px;
+    overflow: auto;
+    background: #ffffff;
+    color: #333;
+}
+
+.settings-select {
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-size: 13px;
+    background: #fff;
+    color: #333;
+}
+
+.settings-note {
+    font-size: 12px;
+    color: #666;
 }
 
 .setting-group h3 {
