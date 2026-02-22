@@ -239,6 +239,25 @@ const WindowManager = {
         if (!this.windows[id]) return;
         this.windows[id].minimized = !this.windows[id].minimized;
         this.windows[id].element.classList.toggle('minimized');
+
+        if (this.windows[id].minimized && this.focusedWindow === id) {
+            this.windows[id].element.classList.remove('focused');
+            const nextVisible = this.windowOrder
+                .slice()
+                .reverse()
+                .find((windowId) => windowId !== id && this.windows[windowId] && !this.windows[windowId].minimized);
+
+            if (nextVisible) {
+                this.focusWindow(nextVisible);
+            } else {
+                this.focusedWindow = null;
+            }
+        }
+
+        if (!this.windows[id].minimized) {
+            this.focusWindow(id);
+        }
+
         this.updateTaskbar();
         this.schedulePersist();
         this.emitChange();
@@ -425,12 +444,14 @@ const WindowManager = {
 
         for (const id in this.windows) {
             const win = this.windows[id];
-            if (win.minimized) continue;
 
             const item = document.createElement('div');
             item.className = 'taskbar-item';
             if (this.focusedWindow === id) {
                 item.classList.add('active');
+            }
+            if (win.minimized) {
+                item.classList.add('minimized');
             }
 
             item.innerHTML = `<i class="${win.icon}"></i> <span>${win.title}</span>`;
