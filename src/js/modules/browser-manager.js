@@ -140,6 +140,30 @@ const BrowserManager = {
             .replaceAll('"', '&quot;')
             .replaceAll("'", '&#39;');
 
+        const iframeLoadTimeoutMs = 9000;
+        let iframeLoadTimeoutId = null;
+        let pendingFrameUrl = '';
+
+        const clearFrameLoadTimeout = () => {
+            if (iframeLoadTimeoutId) {
+                clearTimeout(iframeLoadTimeoutId);
+                iframeLoadTimeoutId = null;
+            }
+            pendingFrameUrl = '';
+        };
+
+        const isKnownIframeBlockedSite = (url) => {
+            try {
+                const parsed = new URL(url);
+                const hostname = parsed.hostname.toLowerCase();
+                return /(^|\.)google\./i.test(hostname)
+                    || /(^|\.)youtube\.com$/i.test(hostname)
+                    || /(^|\.)youtu\.be$/i.test(hostname);
+            } catch {
+                return false;
+            }
+        };
+
         const readPersistedState = () => {
             try {
                 const raw = localStorage.getItem(this.storageKey);
@@ -227,11 +251,65 @@ const BrowserManager = {
                     <section class="search-card">
                         <h1 class="search-title">Search Preview</h1>
                         <p class="search-text">You searched for:<br><span class="search-query">${escapeHtml(query)}</span></p>
-                        <p class="search-text" style="margin-top: 12px;">Unfortunately, Google does not work in an iframe.</p>
+                        <p class="search-text" style="margin-top: 12px;">Unfortunately, this site does not work in an iframe.</p>
                     </section>
                 </body>
                 </html>
             `;
+        };
+
+        const renderIframeBlockedPage = (url) => {
+            frame.srcdoc = `
+                <!doctype html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Unable to display website</title>
+                    <style>
+                        body { margin: 0; font-family: Ubuntu, Arial, sans-serif; background: #f7f7f7; color: #222; min-height: 100vh; display: grid; place-items: center; }
+                        .notice-card { width: min(640px, calc(100% - 48px)); background: #fff; border: 1px solid #e6e6e6; border-radius: 12px; padding: 24px; box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08); }
+                        .notice-title { font-size: 22px; margin: 0 0 10px; }
+                        .notice-text { margin: 0; color: #555; font-size: 15px; line-height: 1.5; }
+                        .notice-url { display: inline-block; margin-top: 8px; padding: 6px 10px; border-radius: 999px; background: #f1f5ff; border: 1px solid #d8e2ff; color: #243b75; font-weight: 600; }
+                    </style>
+                </head>
+                <body>
+                    <section class="notice-card">
+                        <h1 class="notice-title">This site cannot be shown here</h1>
+                        <p class="notice-text">Unfortunately, this site does not work in an iframe:</p>
+                        <p class="notice-text"><span class="notice-url">${escapeHtml(url || 'Unknown URL')}</span></p>
+                    </section>
+                </body>
+                </html>
+            `;
+        };
+
+        const showUnavailablePage = (url) => {
+            clearFrameLoadTimeout();
+            frame.removeAttribute('src');
+            renderIframeBlockedPage(url);
+            setStatus('Unable to load this page in the embedded view.');
+        };
+
+        const loadUrlInFrame = (url) => {
+            clearFrameLoadTimeout();
+
+            if (isKnownIframeBlockedSite(url)) {
+                showUnavailablePage(url);
+                return;
+            }
+
+            pendingFrameUrl = url;
+            frame.removeAttribute('srcdoc');
+            frame.src = url;
+            setStatus('Loading...');
+
+            iframeLoadTimeoutId = setTimeout(() => {
+                const tab = getActiveTab();
+                if (!tab || tab.type !== 'url' || tab.url !== url) return;
+                showUnavailablePage(url);
+            }, iframeLoadTimeoutMs);
         };
 
         const renderTabs = () => {
@@ -276,15 +354,14 @@ const BrowserManager = {
             if (!tab) return;
 
             if (tab.type === 'search') {
+                clearFrameLoadTimeout();
                 frame.removeAttribute('src');
                 renderSearchPage(tab.query || '');
                 addressInput.value = tab.query || '';
                 setStatus('Showing local search preview.');
             } else {
-                frame.removeAttribute('srcdoc');
-                frame.src = tab.url;
                 addressInput.value = tab.url;
-                setStatus('Loading...');
+                loadUrlInFrame(tab.url);
             }
 
             renderTabs();
@@ -303,6 +380,7 @@ const BrowserManager = {
                 tab.type = 'search';
                 tab.query = result.query;
                 tab.title = `Search: ${result.query.slice(0, 24)}`;
+                clearFrameLoadTimeout();
                 renderSearchPage(result.query);
                 frame.removeAttribute('src');
                 addressInput.value = result.display;
@@ -312,10 +390,8 @@ const BrowserManager = {
                 tab.url = result.target;
                 tab.query = '';
                 tab.title = result.target.replace(/^https?:\/\//i, '').slice(0, 26) || 'Website';
-                frame.removeAttribute('srcdoc');
-                frame.src = result.target;
                 addressInput.value = result.target;
-                setStatus('Loading...');
+                loadUrlInFrame(result.target);
                 addHistory(result.target);
             }
 
@@ -478,11 +554,12 @@ const BrowserManager = {
         });
 
         frame.addEventListener('load', () => {
+            clearFrameLoadTimeout();
             setStatus('Ready');
         });
 
         frame.addEventListener('error', () => {
-            setStatus('Unable to load this page in the embedded view.');
+            showUnavailablePage(pendingFrameUrl || addressInput.value || this.defaultUrl);
         });
 
         displayActiveTab();
