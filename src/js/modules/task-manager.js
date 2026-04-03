@@ -130,12 +130,21 @@ const TaskManager = {
             `).join('');
         };
 
-        table.addEventListener('click', (event) => {
+        const handleKillAction = (event) => {
             const target = event.target;
             if (!(target instanceof Element)) return;
 
             const button = target.closest('[data-action="kill"]');
             if (!button || !table.contains(button)) return;
+
+            if (event.type === 'keydown') {
+                const keyboardEvent = event;
+                if (keyboardEvent.key !== 'Enter' && keyboardEvent.key !== ' ') {
+                    return;
+                }
+            }
+
+            event.preventDefault();
 
             const targetId = button.getAttribute('data-id');
             if (!targetId) return;
@@ -151,7 +160,11 @@ const TaskManager = {
                 type: 'warning'
             });
             render();
-        });
+        };
+
+        // Use pointerdown because the table is refreshed every second and click can be lost.
+        table.addEventListener('pointerdown', handleKillAction);
+        table.addEventListener('keydown', handleKillAction);
 
         refreshBtn.addEventListener('click', render);
         closeAllBtn.addEventListener('click', () => {
